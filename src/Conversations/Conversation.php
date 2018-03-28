@@ -9,10 +9,18 @@ class Conversation extends Model
     protected $table = 'conversations';
     public $timestamps = true;
     public $fillable = [
-        'user_one',
-        'user_two',
+        'user_id',
+        'name',
+        'image',
+        'group',
+        'private',
         'status',
     ];
+
+    public function participants()
+    {
+        return $this->hasMany('Nahid\Talk\Conversations\ConversationParticipant', 'conversation_id', 'id');
+    }
 
     /*
      * make a relation between message
@@ -21,8 +29,7 @@ class Conversation extends Model
      * */
     public function messages()
     {
-        return $this->hasMany('Nahid\Talk\Messages\Message', 'conversation_id')
-            ->with('sender');
+        return $this->hasMany('Nahid\Talk\Messages\Message', 'conversation_id');
     }
 
     /*
@@ -30,18 +37,8 @@ class Conversation extends Model
      *
      * return collection
      * */
-    public function userone()
+    public function creator()
     {
-        return $this->belongsTo(config('talk.user.model', 'App\User'),  'user_one');
-    }
-
-    /*
-   * make a relation between second user from conversation
-   *
-   * return collection
-   * */
-    public function usertwo()
-    {
-        return $this->belongsTo(config('talk.user.model', 'App\User'),  'user_two');
+        return $this->belongsTo(config('talk.user.model'), 'user_id', 'id');
     }
 }

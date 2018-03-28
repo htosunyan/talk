@@ -25,12 +25,28 @@ class Webcast implements ShouldQueue
      * */
     protected $broadcast;
 
+    /*
+   * Conversation Model Instance
+   *
+   * @var object
+   * */
+    protected $conversation;
+
+    /*
+   * Participants Model Instance
+   *
+   * @var object
+   * */
+    protected $participants;
+
+
     /**
      * Set message collections to the properties.
      */
-    public function __construct($message)
+    public function __construct($message, $participants)
     {
         $this->message = $message;
+        $this->participants = $participants;
     }
 
     /*
@@ -42,11 +58,11 @@ class Webcast implements ShouldQueue
     public function handle(Broadcast $broadcast)
     {
         $this->broadcast = $broadcast;
-        $toUser = ($this->message['sender']['id'] == $this->message['conversation']['user_one']) ? $this->message['conversation']['user_two'] : $this->message['conversation']['user_one'];
-
-        $channelForUser = $this->broadcast->getConfig('broadcast.app_name').'-user-'.$toUser;
         $channelForConversation = $this->broadcast->getConfig('broadcast.app_name').'-conversation-'.$this->message['conversation_id'];
-
-        $this->broadcast->pusher->trigger([sha1($channelForUser), sha1($channelForConversation)], 'talk-send-message', $this->message);
+        $channelForInboxSender = $this->broadcast->getConfig('broadcast.app_name').'-inbox-'.$this->message['user_id'];
+        foreach($this->participants as $participant_user_id){
+            $channelForInboxReceivers[] = $this->broadcast->getConfig('broadcast.app_name').'-inbox-'.$participant_user_id;
+        }
+        $this->broadcast->pusher->trigger([$channelForConversation, implode(',', $channelForInboxReceivers)], 'talk-send-message', $this->message);
     }
 }
